@@ -51,30 +51,71 @@ client.connect(err => {
       })
   })
 
-  // app.patch("/like/:id", (req, res) => {
-  //   console.log("data:",req.body.likeData);
-  //   postCollection.updateOne({_id: ObjectID(req.params.id)},
-  //     {$push: {likes: req.body.likeData}})
-  //     .then (result => {
-  //       res.send(result.modifiedCount > 0)
-  //     })
-  // })
+  app.patch('/comment/:id', async (req, res) => {
+    const newComment = req.body;
+    try {
+      await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
+        { $push: { comments: newComment } },
+        { upsert: true });
+      res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
+
+  app.patch('/follow/:id', async (req, res) => {
+    const { followersEmail, followersId, followingEmail } = req.body;
+    try {
+      await userCollection.updateOne({ _id: new ObjectID(req.params.id) },
+        { $push: { followers: followersEmail } },
+        { upsert: true });
+      return res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    };
+    try {
+      await userCollection.updateOne({ _id: new ObjectID(followersId) },
+        { $push: { following: followingEmail } },
+        { upsert: true });
+      return res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
 
   app.patch('/like/:id', async (req, res) => {
     const email = req.body;
-    console.log("email", email.email)
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
-      { $push: { likes : email.email } },
-      { upsert: true });
-      // Send response in here
+        { $push: { likes: email.email } },
+        { upsert: true });
       res.send('Item Updated!');
 
-    } catch(err) {
-        console.error(err.message);
-        res.sendStatus(400).send('Server Error');
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
     }
-});
+  });
+
+  app.patch('/unlike/:id', async (req, res) => {
+    const email = req.body;
+    try {
+      await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
+        { $pull: { likes: email.email } },
+        { upsert: true });
+      res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
 
   app.post("/addPosts", (req, res) => {
     const newPost = req.body;
@@ -232,7 +273,7 @@ client.connect(err => {
 /////////
 
 app.get('/', (req, res) => {
-  res.send('Hello from Airvice AC Repairing!')
+  res.send('Hello from Instagram Cloning!')
 })
 
 app.listen(process.env.PORT || port)
