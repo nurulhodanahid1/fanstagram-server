@@ -81,6 +81,30 @@ client.connect(err => {
       await userCollection.updateOne({ _id: new ObjectID(followersId) },
         { $push: { following: followingEmail } },
         { upsert: true });
+      res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
+
+  app.patch('/unfollow/:id', async (req, res) => {
+    const { followersEmail, followersId, followingEmail } = req.body;
+    try {
+      await userCollection.updateOne({ _id: new ObjectID(req.params.id) },
+        { $pull: { followers: followersEmail } },
+        { upsert: true });
+      return res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    };
+    try {
+      await userCollection.updateOne({ _id: new ObjectID(followersId) },
+        { $pull: { following: followingEmail } },
+        { upsert: true });
       return res.send('Item Updated!');
 
     } catch (err) {
