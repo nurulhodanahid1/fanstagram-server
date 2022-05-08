@@ -19,15 +19,34 @@ client.connect(err => {
   const postCollection = client.db("instagramCloneDB").collection("posts");
   const userCollection = client.db("instagramCloneDB").collection("users");
 
-  app.get('/profilePosts', (req, res) => {
-    const userEmail = req.query.email;
-    console.log(userEmail)
-    postCollection.find({ email: userEmail })
-      .toArray((err, posts) => {
-        res.send(posts)
-      })
+
+  app.delete('/deletePost/:id', (req, res) => {
+    const id = ObjectID(req.params.id);
+    console.log('delete event', id);
+    postCollection.findOneAndDelete({ _id: id })
+      .then(documents => res.send(!!documents.value))
   })
 
+  app.patch('/addProfilePic', async (req, res) => {
+    const { userId, imageURL } = req.body;
+    console.log("user id:", userId)
+    console.log("image url:", imageURL);
+    try {
+      await userCollection.updateOne({ _id: new ObjectID(userId) },
+        { $set: { imageURL: imageURL } },
+        { upsert: true });
+      return res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
+
+
+
+  // Adding A New User //
+  // All User //
   app.post("/addUsers", (req, res) => {
     const newUser = req.body;
     userCollection.insertOne(newUser)
@@ -43,6 +62,34 @@ client.connect(err => {
       })
   })
 
+  // Crate Post for Login User //
+  // All posts showed
+  app.post("/addPosts", (req, res) => {
+    const newPost = req.body;
+    postCollection.insertOne(newPost)
+      .then(result => {
+        console.log("inserted count", result.insertedCount);
+        res.send(result.insertedCount > 0)
+      })
+  })
+  app.get('/allPosts', (req, res) => {
+    postCollection.find()
+      .toArray((err, items) => {
+        res.send(items);
+      })
+  })
+
+  // Every User Different Profile Details //
+  app.get('/profilePosts', (req, res) => {
+    const userEmail = req.query.email;
+    console.log(userEmail)
+    postCollection.find({ email: userEmail })
+      .toArray((err, posts) => {
+        res.send(posts)
+      })
+  })
+
+  // Single Post Find For Like And Comment In Home Component//
   app.get('/post/:id', (req, res) => {
     const id = ObjectID(req.params.id)
     postCollection.find({ _id: id })
@@ -50,7 +97,35 @@ client.connect(err => {
         res.send(documents[0]);
       })
   })
+  // Add and Remove like each post
+  app.patch('/like/:id', async (req, res) => {
+    const email = req.body;
+    try {
+      await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
+        { $push: { likes: email.email } },
+        { upsert: true });
+      res.send('Item Updated!');
 
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
+  app.patch('/unlike/:id', async (req, res) => {
+    const email = req.body;
+    try {
+      await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
+        { $pull: { likes: email.email } },
+        { upsert: true });
+      res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
+
+  // Add Comment in a Post //
   app.patch('/comment/:id', async (req, res) => {
     const newComment = req.body;
     try {
@@ -58,6 +133,22 @@ client.connect(err => {
         { $push: { comments: newComment } },
         { upsert: true });
       res.send('Item Updated!');
+
+    } catch (err) {
+      console.error(err.message);
+      res.sendStatus(400).send('Server Error');
+    }
+  });
+
+  //  Follow and Unfollow User 
+  //  Adding to Followers array and Following array same time
+  app.patch('/follow', async (req, res) => {
+    const { followersEmail, followersId, followingEmail } = req.body;
+    try {
+      await userCollection.updateOne({ _id: new ObjectID(followersId) },
+        { $push: { following: followingEmail } },
+        { upsert: true });
+      return res.send('Item Updated!');
 
     } catch (err) {
       console.error(err.message);
@@ -77,16 +168,6 @@ client.connect(err => {
       console.error(err.message);
       res.sendStatus(400).send('Server Error');
     };
-    try {
-      await userCollection.updateOne({ _id: new ObjectID(followersId) },
-        { $push: { following: followingEmail } },
-        { upsert: true });
-      res.send('Item Updated!');
-
-    } catch (err) {
-      console.error(err.message);
-      res.sendStatus(400).send('Server Error');
-    }
   });
 
   app.patch('/unfollow/:id', async (req, res) => {
@@ -101,6 +182,10 @@ client.connect(err => {
       console.error(err.message);
       res.sendStatus(400).send('Server Error');
     };
+  });
+
+  app.patch('/unfollow', async (req, res) => {
+    const { followersEmail, followersId, followingEmail } = req.body;
     try {
       await userCollection.updateOne({ _id: new ObjectID(followersId) },
         { $pull: { following: followingEmail } },
@@ -113,188 +198,7 @@ client.connect(err => {
     }
   });
 
-  app.patch('/like/:id', async (req, res) => {
-    const email = req.body;
-    try {
-      await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
-        { $push: { likes: email.email } },
-        { upsert: true });
-      res.send('Item Updated!');
-
-    } catch (err) {
-      console.error(err.message);
-      res.sendStatus(400).send('Server Error');
-    }
-  });
-
-  app.patch('/unlike/:id', async (req, res) => {
-    const email = req.body;
-    try {
-      await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
-        { $pull: { likes: email.email } },
-        { upsert: true });
-      res.send('Item Updated!');
-
-    } catch (err) {
-      console.error(err.message);
-      res.sendStatus(400).send('Server Error');
-    }
-  });
-
-  app.post("/addPosts", (req, res) => {
-    const newPost = req.body;
-    postCollection.insertOne(newPost)
-      .then(result => {
-        console.log("inserted count", result.insertedCount);
-        res.send(result.insertedCount > 0)
-      })
-  })
-  app.get('/allPosts', (req, res) => {
-    postCollection.find()
-      .toArray((err, items) => {
-        res.send(items);
-      })
-  })
 });
-
-
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6dt9c.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-
-// const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
-// ///////
-// client.connect(err => {
-//   const serviceCollection = client.db(process.env.DB_NAME).collection("services");
-//   const orderCollection = client.db(process.env.DB_NAME).collection("orders");
-//   const reviewCollection = client.db(process.env.DB_NAME).collection("reviews");
-//   const engineerCollection = client.db(process.env.DB_NAME).collection("engineers");
-//   const postCollection = client.db(process.env.DB_NAME).collection("posts");
-
-//   app.post("/addPosts", (req, res) => {
-//     const newPost = req.body;
-//     postCollection.insertOne(newPost)
-//       .then(result => {
-//         console.log("inserted count", result.insertedCount);
-//         res.send(result.insertedCount > 0)
-//       })
-//   })
-
-//   app.post("/addServices", (req, res) => {
-//     const newService = req.body;
-//     console.log("New Event", newService);
-//     serviceCollection.insertOne(newService)
-//       .then(result => {
-//         console.log("inserted count", result.insertedCount);
-//         res.send(result.insertedCount > 0)
-//       })
-//   })
-
-
-//   app.get('/services', (req, res) => {
-//     serviceCollection.find()
-//       .toArray((err, items) => {
-//         res.send(items);
-//       })
-//   })
-
-//   app.delete('/deleteService/:id', (req, res) => {
-//     const id = ObjectID(req.params.id);
-//     console.log('delete event', id);
-//     serviceCollection.findOneAndDelete({ _id: id })
-//       .then(documents => res.send(!!documents.value))
-//   })
-
-//   // Add Orders
-//   app.post('/addOrders', (req, res) => {
-//     const newOrder = req.body;
-//     orderCollection.insertOne(newOrder)
-//       .then(result => {
-//         res.send(result.insertedCount > 0)
-//       })
-//   })
-
-//   app.get('/orders', (req, res) => {
-//     //console.log(req.query.email)
-//     const userEmail = req.query.email
-//     engineerCollection.find({ email: userEmail })
-//       .toArray((err, engineers) => {
-//         const filter = {};
-//         if (engineers.length === 0) {
-//           filter.email = userEmail;
-//         }
-//         orderCollection.find(filter)
-//           .toArray((err, documents) => {
-//             res.send(documents)
-//           })
-//       })
-//   })
-//   // single order load & update status
-//   app.get('/order/:id', (req, res) => {
-//     const id = ObjectID(req.params.id)
-//     orderCollection.find({_id: id})
-//     .toArray ( (err, documents) =>{
-//       res.send(documents[0]);
-//     })
-//   })
-//   app.patch('/update/:id', (req, res) => {
-//     orderCollection.updateOne({_id: ObjectID(req.params.id)},
-//     {
-//       $set: {status: req.body.newStatus}
-//     })
-//     .then (result => {
-//       res.send(result.modifiedCount > 0)
-//     })
-//   })
-
-//   //add review
-//   app.post("/addReviews", (req, res) => {
-//     const newReview = req.body;
-//     console.log("New Review", newReview);
-//     reviewCollection.insertOne(newReview)
-//       .then(result => {
-//         console.log("inserted count", result.insertedCount);
-//         res.send(result.insertedCount > 0)
-//       })
-//   })
-
-
-//   app.get('/reviews', (req, res) => {
-//     reviewCollection.find()
-//       .toArray((err, items) => {
-//         res.send(items);
-//       })
-//   })
-
-//   /////////////add engineer
-
-//   app.post("/addEngineers", (req, res) => {
-//     const newEngineer = req.body;
-//     console.log("New Engineer", newEngineer);
-//     engineerCollection.insertOne(newEngineer)
-//       .then(result => {
-//         console.log("inserted count", result.insertedCount);
-//         res.send(result.insertedCount > 0)
-//       })
-//   })
-
-//   app.get('/engineers', (req, res) => {
-//     engineerCollection.find()
-//       .toArray((err, items) => {
-//         res.send(items);
-//       })
-//   })
-//   ///admin
-//   app.post('/isEngineer', (req, res) => {
-//     const signInEmail = req.body.email;
-//     console.log("isEngineer", signInEmail)
-//     engineerCollection.find({ email: signInEmail })
-//       .toArray((err, engineers) => {
-//         res.send(engineers.length > 0);
-//       })
-//   })
-
-// });
-/////////
 
 app.get('/', (req, res) => {
   res.send('Hello from Instagram Cloning!')
