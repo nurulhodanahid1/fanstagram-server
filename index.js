@@ -3,7 +3,6 @@ const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
-// const { MongoClient } = require('mongodb');
 const ObjectID = require('mongodb').ObjectID;
 
 const port = process.env.PORT || 5000;
@@ -13,7 +12,7 @@ app.use(bodyParser.json());
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://nahid2344:n335566GG4344@cluster0.yp2u3.mongodb.net/instagramCloneDB?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yp2u3.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 client.connect(err => {
   const postCollection = client.db("instagramCloneDB").collection("posts");
@@ -34,8 +33,11 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(userId) },
         { $set: { imageURL: imageURL } },
-        { upsert: true });
-      return res.send('Item Updated!');
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
 
     } catch (err) {
       console.error(err.message);
@@ -97,15 +99,18 @@ client.connect(err => {
         res.send(documents[0]);
       })
   })
+
   // Add and Remove like each post
   app.patch('/like/:id', async (req, res) => {
     const email = req.body;
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $push: { likes: email.email } },
-        { upsert: true });
-      res.send('Item Updated!');
-
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
     } catch (err) {
       console.error(err.message);
       res.sendStatus(400).send('Server Error');
@@ -116,9 +121,11 @@ client.connect(err => {
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $pull: { likes: email.email } },
-        { upsert: true });
-      res.send('Item Updated!');
-
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
     } catch (err) {
       console.error(err.message);
       res.sendStatus(400).send('Server Error');
@@ -131,9 +138,11 @@ client.connect(err => {
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $push: { comments: newComment } },
-        { upsert: true });
-      res.send('Item Updated!');
-
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
     } catch (err) {
       console.error(err.message);
       res.sendStatus(400).send('Server Error');
@@ -147,9 +156,11 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(followersId) },
         { $push: { following: followingEmail } },
-        { upsert: true });
-      return res.send('Item Updated!');
-
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
     } catch (err) {
       console.error(err.message);
       res.sendStatus(400).send('Server Error');
@@ -161,8 +172,11 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $push: { followers: followersEmail } },
-        { upsert: true });
-      return res.send('Item Updated!');
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
 
     } catch (err) {
       console.error(err.message);
@@ -175,8 +189,11 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $pull: { followers: followersEmail } },
-        { upsert: true });
-      return res.send('Item Updated!');
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
 
     } catch (err) {
       console.error(err.message);
@@ -189,8 +206,11 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(followersId) },
         { $pull: { following: followingEmail } },
-        { upsert: true });
-      return res.send('Item Updated!');
+        { upsert: true }).then(function (data) {
+          if (data) {
+            res.send(data)
+          }
+        })
 
     } catch (err) {
       console.error(err.message);
