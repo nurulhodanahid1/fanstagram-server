@@ -34,10 +34,8 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(userId) },
         { $set: { imageURL: imageURL } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
 
     } catch (err) {
@@ -52,6 +50,7 @@ client.connect(err => {
   // All User //
   app.post("/addUsers", (req, res) => {
     const newUser = req.body;
+    console.log("newuser",newUser)
     userCollection.insertOne(newUser)
       .then(result => {
         console.log("inserted count", result.insertedCount);
@@ -107,10 +106,8 @@ client.connect(err => {
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $push: { likes: email.email } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
     } catch (err) {
       console.error(err.message);
@@ -122,10 +119,8 @@ client.connect(err => {
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $pull: { likes: email.email } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
     } catch (err) {
       console.error(err.message);
@@ -139,10 +134,8 @@ client.connect(err => {
     try {
       await postCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $push: { comments: newComment } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
     } catch (err) {
       console.error(err.message);
@@ -157,10 +150,8 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(followersId) },
         { $push: { following: followingEmail } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
     } catch (err) {
       console.error(err.message);
@@ -173,10 +164,8 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $push: { followers: followersEmail } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
 
     } catch (err) {
@@ -190,10 +179,8 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(req.params.id) },
         { $pull: { followers: followersEmail } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
 
     } catch (err) {
@@ -207,10 +194,8 @@ client.connect(err => {
     try {
       await userCollection.updateOne({ _id: new ObjectID(followersId) },
         { $pull: { following: followingEmail } },
-        { upsert: true }).then(function (data) {
-          if (data) {
-            res.send(data)
-          }
+        { upsert: true }).then( data => {
+          res.send(data)
         })
 
     } catch (err) {
