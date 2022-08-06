@@ -15,8 +15,8 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yp2u3.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 client.connect(err => {
-  const postCollection = client.db("internshalaAssignmentDB").collection("posts");
-  const userCollection = client.db("internshalaAssignmentDB").collection("users");
+  const postCollection = client.db("fanstagramDB").collection("posts");
+  const userCollection = client.db("fanstagramDB").collection("users");
 
   // log in
   app.post('/signin', (req, res) => {
@@ -248,7 +248,7 @@ client.connect(err => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Hello from Internshala Assignment!');
+  res.send('Hello from FanstaGram Server!');
 })
 
 app.listen(process.env.PORT || port)
